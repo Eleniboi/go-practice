@@ -1,19 +1,18 @@
 package main
 
 import (
-	
 	"strings"
 )
 
-func StringToArt(input string) string{
+func StringToArt(input string) string {
 
-	if input == ""{
+	if input == "" {
 		return ""
 	}
-	    var result string
-		var build strings.Builder
+	var result string
+	var build strings.Builder
 
-	var mapper =map[rune][]string{
+	var mapper = map[rune][]string{
 		'0': {
 			" ___ ",
 			"|   |",
@@ -29,34 +28,31 @@ func StringToArt(input string) string{
 			"  |  ",
 			"  |  ",
 		},
-'2':{
-		" ___ ",
-		"    /",
-		"  _/ ",
-		" /   ",
-		"/___ ",
-
-         },		
+		'2': {
+			" ___ ",
+			"    /",
+			"  _/ ",
+			" /   ",
+			"/___ ",
+		},
 	}
 
- splitInput := strings.Split(input, "\n")
+	splitInput := strings.Split(input, "\n")
+	for _, word := range splitInput {
 
-for _, word := range splitInput{
+		for i := 0; i < 5; i++ {
+			for _, ch := range word {
 
-	for i := 0; i < 5; i++ {
-
-	for _, ch := range word {
-
-		if ch < '0' || ch > '9'{
-			return ""
+				if ch < '0' || ch > '9' {
+					return ""
+				}
+				if ch >= '0' || ch <= '9' {
+					build.WriteString(mapper[ch][i])
+				}
+			}
+			build.WriteString("\n")
+			result = build.String()
 		}
-		if ch >= '0' && ch <= '9'{
-			build.WriteString(mapper[ch][i])
-		}
-	}
-	build.WriteString("\n")
-	result = build.String()
-  }
 	}
 	return result
 }
