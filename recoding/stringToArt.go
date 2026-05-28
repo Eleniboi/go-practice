@@ -9,7 +9,7 @@ func StringToArt(input string) string {
 	if input == "" {
 		return ""
 	}
-	var result string
+	//var result string
 	var build strings.Builder
 
 	var mapper = map[rune][]string{
@@ -38,21 +38,20 @@ func StringToArt(input string) string {
 	}
 
 	splitInput := strings.Split(input, "\n")
+	
 	for _, word := range splitInput {
 
 		for i := 0; i < 5; i++ {
 			for _, ch := range word {
-
 				if ch < '0' || ch > '9' {
 					return ""
 				}
-				if ch >= '0' || ch <= '9' {
+				if ch >= '0' && ch <= '9' {
 					build.WriteString(mapper[ch][i])
 				}
 			}
 			build.WriteString("\n")
-			result = build.String()
 		}
 	}
-	return result
+	return build.String()
 }
