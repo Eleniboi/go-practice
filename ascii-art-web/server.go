@@ -5,13 +5,13 @@ import (
 	"net/http"
 )
 
-//This  
-func homeHandler(w http.ResponseWriter, r *http.Request){
+// homeHandler handle homepage requests
+func homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintln(w, "Welcome Home")
 }
 
-func aboutHandler(w http.ResponseWriter, r *http.Request){
+func aboutHandler(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Fprintln(w, "This page was created to teach young youth Tech")
 }
