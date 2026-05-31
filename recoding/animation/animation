@@ -1,0 +1,303 @@
+package animation
+
+import (
+	"fmt"
+	"math"
+	"strings"
+)
+
+const frameHeight = 10
+
+// Animation holds the configuration and generated frames
+type Animation struct {
+	Text   string
+	Frames int
+	frames []string
+}
+
+// NewAnimation creates a new Animation with the given text and frame count
+func NewAnimation(text string, frames int) *Animation {
+	return &Animation{
+		Text:   text,
+		Frames: frames,
+		frames: []string{},
+	}
+}
+
+// padToWidth pads or truncates a string to exactly `width` chars
+func padToWidth(s string, width int) string {
+	if len(s) >= width {
+		return s[:width]
+	}
+	return s + strings.Repeat(" ", width-len(s))
+}
+
+// padFrame ensures a frame is exactly 10 lines tall and each line is exactly `width` wide
+func padFrame(lines []string, width int) string {
+	result := make([]string, frameHeight)
+	for i := 0; i < frameHeight; i++ {
+		if i < len(lines) {
+			result[i] = padToWidth(lines[i], width)
+		} else {
+			result[i] = strings.Repeat(" ", width)
+		}
+	}
+	return strings.Join(result, "\n")
+}
+
+// centerInWidth centers a string within a given width using spaces
+func centerInWidth(s string, width int) string {
+	if len(s) >= width {
+		return s[:width]
+	}
+	left := (width - len(s)) / 2
+	right := width - len(s) - left
+	return strings.Repeat(" ", left) + s + strings.Repeat(" ", right)
+}
+
+// GenerateSpinFrames creates a spinning rotation animation
+func (a *Animation) GenerateSpinFrames() {
+	spinChars := []string{"|", "/", "-", "\\", "|", "/", "-", "\\"}
+	borderChars := []string{"*", "+", "o", ".", "*", "+", "o", "."}
+
+	// Fixed width so every line in every frame is identical length
+	width := 30
+	if len(a.Text)+10 > width {
+		width = len(a.Text) + 10
+	}
+
+	a.frames = make([]string, a.Frames)
+
+	for i := 0; i < a.Frames; i++ {
+		spin := spinChars[i%len(spinChars)]
+		border := borderChars[i%len(borderChars)]
+
+		borderLine := strings.Repeat(border, width)
+		angle := float64(i) / float64(a.Frames) * 360.0
+
+		// inner content width = width - 4 (two border chars + two spaces on each side)
+		inner := width - 4
+
+		// rotating dot bar: width - 6 (border + space + "[" + "]" + space + border)
+		barInner := width - 6
+		pos := 0
+		if a.Frames > 1 {
+			pos = int(float64(barInner) * float64(i) / float64(a.Frames))
+		}
+		bar := strings.Repeat(".", pos) + spin + strings.Repeat(".", barInner-pos-1)
+
+		lines := []string{
+			borderLine,
+			spin + " " + centerInWidth(fmt.Sprintf("[ Angle: %6.1f° ]", angle), inner) + " " + spin,
+			border + " " + strings.Repeat(" ", inner) + " " + border,
+			spin + " " + centerInWidth(a.Text, inner) + " " + spin,
+			border + " " + strings.Repeat(" ", inner) + " " + border,
+			border + " [" + bar + "] " + border,
+			spin + " " + strings.Repeat(" ", inner) + " " + spin,
+			border + " " + centerInWidth(fmt.Sprintf("Frame %d/%d", i+1, a.Frames), inner) + " " + border,
+			spin + " " + strings.Repeat(" ", inner) + " " + spin,
+			borderLine,
+		}
+
+		a.frames[i] = padFrame(lines, width)
+	}
+}
+
+// GenerateWaveFrames creates a wave animation effect
+func (a *Animation) GenerateWaveFrames() {
+	width := 40
+	if len(a.Text)+10 > width {
+		width = len(a.Text) + 10
+	}
+
+	a.frames = make([]string, a.Frames)
+
+	for i := 0; i < a.Frames; i++ {
+		phase := float64(i) / float64(a.Frames) * 2 * math.Pi
+		lines := make([]string, 0, frameHeight)
+
+		// Line 0: top decorative wave
+		topWave := make([]byte, width)
+		for x := 0; x < width; x++ {
+			val := math.Sin(float64(x)*0.3 + phase)
+			switch {
+			case val > 0.6:
+				topWave[x] = '^'
+			case val > 0:
+				topWave[x] = '~'
+			case val > -0.6:
+				topWave[x] = '_'
+			default:
+				topWave[x] = '.'
+			}
+		}
+		lines = append(lines, string(topWave))
+
+		// Lines 1–6: wave rows
+		for row := 1; row <= 6; row++ {
+			rowPhase := phase + float64(row)*0.4
+			line := make([]byte, width)
+			for x := 0; x < width; x++ {
+				line[x] = ' '
+			}
+			for x := 0; x < width; x++ {
+				waveVal := math.Sin(float64(x)*0.25+rowPhase) * float64(frameHeight/2)
+				r := int(math.Round(waveVal))
+				if r == row-3 {
+					line[x] = '#'
+				} else if r == row-4 || r == row-2 {
+					line[x] = '+'
+				}
+			}
+			// Overlay text in middle row
+			if row == 3 {
+				label := "[ " + a.Text + " ]"
+				start := (width - len(label)) / 2
+				if start >= 0 && start+len(label) <= width {
+					copy(line[start:], []byte(label))
+				}
+			}
+			lines = append(lines, string(line))
+		}
+
+		// Line 7: bottom wave (mirrored phase)
+		botWave := make([]byte, width)
+		for x := 0; x < width; x++ {
+			val := math.Sin(float64(x)*0.3 - phase)
+			switch {
+			case val > 0.6:
+				botWave[x] = 'v'
+			case val > 0:
+				botWave[x] = '~'
+			case val > -0.6:
+				botWave[x] = '_'
+			default:
+				botWave[x] = '.'
+			}
+		}
+		lines = append(lines, string(botWave))
+
+		// Line 8: progress bar
+		prog := 0
+		if a.Frames > 1 {
+			prog = int(float64(width-2) * float64(i) / float64(a.Frames))
+		}
+		progressBar := "[" + strings.Repeat("=", prog) + strings.Repeat("-", width-2-prog) + "]"
+		lines = append(lines, progressBar)
+
+		// Line 9: frame label
+		lines = append(lines, centerInWidth(fmt.Sprintf("~ Wave Frame %d ~", i+1), width))
+
+		a.frames[i] = padFrame(lines, width)
+	}
+}
+
+// GenerateZoomFrames creates a zoom in/out animation
+func (a *Animation) GenerateZoomFrames() {
+	maxWidth := 40
+
+	a.frames = make([]string, a.Frames)
+
+	for i := 0; i < a.Frames; i++ {
+		// Sine over [0,π] → smooth zoom 0.2 → 1.0 → 0.2
+		t := math.Sin(float64(i) / float64(a.Frames) * math.Pi)
+		zoom := 0.2 + 0.8*t
+
+		boxWidth := int(math.Round(float64(maxWidth) * zoom))
+		if boxWidth < 4 {
+			boxWidth = 4
+		}
+		if boxWidth > maxWidth {
+			boxWidth = maxWidth
+		}
+
+		textLen := int(math.Round(float64(len(a.Text)) * zoom))
+		if textLen < 1 {
+			textLen = 1
+		}
+		scaledText := scaleText(a.Text, textLen)
+
+		boxPad := (maxWidth - boxWidth) / 2
+		pad := strings.Repeat(" ", boxPad)
+
+		inner := boxWidth - 2
+		if inner < 1 {
+			inner = 1
+		}
+
+		topBot := pad + "+" + strings.Repeat("-", inner) + "+"
+		emptyRow := pad + "|" + strings.Repeat(" ", inner) + "|"
+
+		// Three concentric dot rings that scale with zoom
+		dotRow := func(ratio float64) string {
+			dotW := int(math.Round(float64(inner) * ratio))
+			if dotW < 1 {
+				dotW = 1
+			}
+			if dotW > inner {
+				dotW = inner
+			}
+			dotPad := (inner - dotW) / 2
+			content := strings.Repeat(" ", dotPad) +
+				strings.Repeat(".", dotW) +
+				strings.Repeat(" ", inner-dotPad-dotW)
+			return pad + "|" + content + "|"
+		}
+
+		// Text line centered in box
+		textContent := centerInWidth(scaledText, inner)
+
+		lines := []string{
+			strings.Repeat("=", maxWidth),
+			topBot,
+			emptyRow,
+			dotRow(0.25),
+			dotRow(0.55),
+			dotRow(0.85),
+			pad + "|" + textContent + "|",
+			emptyRow,
+			topBot,
+			centerInWidth(fmt.Sprintf("ZOOM: %3d%%", int(zoom*100)), maxWidth),
+		}
+
+		a.frames[i] = padFrame(lines, maxWidth)
+	}
+}
+
+// scaleText samples characters from src to produce a string of length n
+func scaleText(src string, n int) string {
+	if n <= 0 {
+		return ""
+	}
+	if n >= len(src) {
+		return src
+	}
+	out := make([]byte, n)
+	for i := 0; i < n; i++ {
+		idx := i * len(src) / n
+		out[i] = src[idx]
+	}
+	return string(out)
+}
+
+// GetFrame returns the frame at the given index (with wrap-around for seamless looping)
+func (a *Animation) GetFrame(index int) string {
+	if len(a.frames) == 0 {
+		return ""
+	}
+	return a.frames[index%len(a.frames)]
+}
+
+// Play returns all frames joined with delay markers
+func (a *Animation) Play() string {
+	if len(a.frames) == 0 {
+		return ""
+	}
+	var sb strings.Builder
+	for i, frame := range a.frames {
+		sb.WriteString(fmt.Sprintf("--- FRAME %d [DELAY:100ms] ---\n", i+1))
+		sb.WriteString(frame)
+		sb.WriteString("\n")
+	}
+	return sb.String()
+}
