@@ -1,5 +1,6 @@
 ## About Go server and How it Works
 
+**Handler** : is a function that run when a route is been visited, it is responsible for an incoming http request and constructing http response
 ```go
 // homeHandler handle homepage requests
 func homeHandler(w http.ResponseWriter, r *http.Request) {
