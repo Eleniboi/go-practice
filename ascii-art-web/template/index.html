@@ -9,14 +9,23 @@
 <body>
 
     <h1> Ascii-Art-Web</h1>
-    <h5>Enter your text</h5>
 
-    <form>
+<!---the line below provides a form for the user to interact with-->
+<form action="/ascii-art" method="post">
+        <label for="text">Enter a Text: </label><br> 
+        <input id="text" type="text" name="text" placeholder="Enter text here.."><br> 
 
-        <label 
-    </form>
+<!--the content in the select element are the dropdown menu-->
+    <p>choose a banner font</p>
+    <select>
+        <option value="standard.txt">standard</option>
+        <option value="shadow.txt">shadow</option>
+        <option value="thinkertoy.txt">thinkertoy</option>
 
-    <p> To visit our website click the botton below</p>
-    <a href="https://www.wikipedia.org"><button>click</button></a>
+    </select><br><br>
+    <button type="submit">Generate Art</button>
+</form>
+
+    
 </body>
 </html>
