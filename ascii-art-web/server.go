@@ -9,22 +9,28 @@ import (
 // homeHandler handle homepage requests
 func asciiHandler(w http.ResponseWriter, r *http.Request) {
 
-	if r.URL.Path == "/ascii-art" {
-		text := r.FormValue("text")
-		banner := r.FormValue("banner")
+	if r.Method != http.MethodPost {
 
-		font, err := logic.LoadBanner(banner)
+		fmt.Fprintln(w, "This route exists, but it is been access incorrectly")
+		return
+	}
+	
+	//the request from the web are been transfer into variables
+	//one for the user input and the other for the banner choice
 
-		if err != nil {
-			fmt.Fprintln(w, err)
-			return
-		}
+	text := r.FormValue("text")
+	banner := r.FormValue("banner")
 
-		result := logic.GenerateArt(text, font)
+	font, err := logic.LoadBanner(banner)
 
-		fmt.Fprintln(w, result)
+	if err != nil {
+		fmt.Fprintln(w, err)
+		return
 	}
 
+	result := logic.GenerateArt(text, font)
+
+	fmt.Fprintln(w, result)
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
