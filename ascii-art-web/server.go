@@ -1,26 +1,43 @@
 package main
 
 import (
+	"ascii-web/logic"
 	"fmt"
 	"net/http"
 )
 
 // homeHandler handle homepage requests
-func homeHandler(w http.ResponseWriter, r *http.Request) {
+func asciiHandler(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Fprintln(w, "Welcome Home")
+	if r.URL.Path == "/ascii-art" {
+		text := r.FormValue("text")
+		banner := r.FormValue("banner")
+
+		font, err := logic.LoadBanner(banner)
+
+		if err != nil {
+			fmt.Fprintln(w, err)
+			return
+		}
+
+		result := logic.GenerateArt(text, font)
+
+		fmt.Fprintln(w, result)
+	}
+
 }
 
-func aboutHandler(w http.ResponseWriter, r *http.Request) {
+func homeHandler(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Fprintln(w, "This page was created to teach young youth Tech")
+	fmt.Fprintln(w, "template/index.html")
 }
 
 func main() {
 
 	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/about", aboutHandler)
+	http.HandleFunc("/ascii-art", asciiHandler)
 
 	http.ListenAndServe(":8080", nil)
+	fmt.Println("server is now live on port :8080..")
 
 }
